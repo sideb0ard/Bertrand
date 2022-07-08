@@ -1,3 +1,6 @@
 [submodule "websocketpp"]
   path = websocketpp
   url = https://github.com/zaphoyd/websocketpp
+[submodule "web/p5drawinglib"]
+	path = web/p5drawinglib
+	url = git@github.com:sideb0ard/p5drawinglib.git
