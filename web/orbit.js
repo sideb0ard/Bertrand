@@ -1,4 +1,4 @@
-const backgroundColor = 0x111111;
+const backgroundColor = 0x00000F;
 
 /*////////////////////////////////////////*/
 
@@ -13,8 +13,9 @@ render();
 
 var scene = new THREE.Scene();
 
-var camera = new THREE.PerspectiveCamera( 80, window.innerWidth / window.innerHeight, 0.1, 800 );
-camera.position.set(0, 10, 30);
+var camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 1000 );
+camera.position.set(30, 40, 30);
+camera.lookAt(new THREE.Vector3(0, 0, 0));
 
 var renderer = new THREE.WebGLRenderer( { antialias: true } );
 renderer.setPixelRatio( window.devicePixelRatio );
@@ -34,15 +35,19 @@ renderCalls.push(renderScene);
 
 /* ////////////////////////////////////////////////////////////////////////// */
 
-var controls = new THREE.OrbitControls( camera );
+var controls = new THREE.OrbitControls( camera, renderer.domElement );
+controls.enableZoom = false;
+//controls.autoRotate = true;
 
-controls.rotateSpeed = 0.2;
+controls.rotateSpeed = 0.01;
 controls.zoomSpeed = 0.3;
 
 controls.enablePan = false;
 
 controls.enableDamping = true;
 controls.dampingFactor = 0.1;
+
+controls.update();
 
 
 renderCalls.push(function(){
@@ -90,6 +95,12 @@ const material = new THREE.MeshBasicMaterial( { color: 0xffff00 } );
 const sphere = new THREE.Mesh( geometry, material );
 scene.add( sphere );
 
+//const geometry = new THREE.SphereGeometry( 15, 32, 16, 0, Math.PI * 2, 0, Math.PI );
+const innergeometry = new THREE.SphereGeometry( 14.9, 32, 16);
+const innermaterial = new THREE.MeshBasicMaterial( { color: 0xffffFF } );
+const innersphere = new THREE.Mesh( innergeometry, innermaterial );
+scene.add( innersphere );
+
 var stats = initStats();
 renderCalls.push(function(){
   stats.update()
@@ -99,21 +110,33 @@ renderCalls.push(function(){
 
 function generateGeometry() {
 
-  updateGroupGeometry( sphere,
-    new SphereGeometry(
-      15, 32, 16, 0, Math.PI *2, 0, 7)
-  );
+  let geom = new THREE.SphereGeometry(15, 32, 16, 0, Math.PI *2, 0, datcontrols.thetaLength);
+  sphere.geometry.dispose();
+  sphere.geometry = geom;
 }
 
-var datcontrols = new function() {
-  this.rotationSpeed = 0.02;
-  this.bouncingSpeed = 0.03;
-  this.thetaLength = Math.PI;
+
+let step = 0;
+let curTheta = 0;
+
+function animateEyelid(){
+  curTheta = Math.cos(step) * Math.PI;
+  step += datcontrols.eyelidSpeed;
+  let geom = new THREE.SphereGeometry(15, 32, 16, 0, Math.PI *2, 0, curTheta);
+  sphere.geometry.dispose();
+  sphere.geometry = geom;
 }
+
+renderCalls.push(animateEyelid);
+
+var datcontrols = {
+  thetaLength : Math.PI,
+  eyelidSpeed : 0.01,
+}
+
 var gui = new dat.GUI();
-gui.add(datcontrols, 'rotationSpeed', 0, 0.5);
-gui.add(datcontrols, 'bouncingSpeed', 0, 0.5);
-gui.add(datcontrols, 'thetaLength', 0, Math.PI *2);
+gui.add(datcontrols, 'thetaLength', 0, Math.PI).onChange(generateGeometry);
+gui.add(datcontrols, 'eyelidSpeed', 0.01, 1);
 
 
 // taken from view-source:https://threejs.org/docs/scenes/geometry-browser.html#SphereGeometry
